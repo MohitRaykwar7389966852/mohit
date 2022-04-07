@@ -18,6 +18,7 @@ router.get('/test-me', function (req, res) {
 });
 
 router.get('/hello', function (req, res) {
+    res.send("this is hello route handler")
     let array1 = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     console.log(_.chunk(array1, 4))
 
@@ -34,6 +35,7 @@ router.get('/hello', function (req, res) {
     let array3 =[ ['horror',"The Shining"] , ['drama',"Titanic"],['thriller',"Shutter Island"],['fantasy',"Pans Labyrinth"]]
     console.log(_.fromPairs(array3))
 });
+
 
 module.exports = router;
 // adding this comment for no reason
