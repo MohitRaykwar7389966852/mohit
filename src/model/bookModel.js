@@ -7,8 +7,13 @@ const bookSchema = new mongoose.Schema({
     bookName:String,
     authorName:String,
     category:String,
-    year:Number
+    year:Number,
+    isPublish:Boolean,
+    sales:{
+        type:Number,
+        default:0
+    }
 },{timestamps:true});
 
-module.exports = mongoose.model('User' , bookSchema) //this is a syntax to export the model
+module.exports = mongoose.model('Book' , bookSchema) //this is a syntax to export the model
 
