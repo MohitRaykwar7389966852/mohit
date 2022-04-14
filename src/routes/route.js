@@ -1,49 +1,75 @@
 const express = require('express');
-const logger = require('./logger')
 const mongoose = require('mongoose');
 const bookModel = require('../model/bookModel');
+const authorModel = require('../model/authorModel');
 const router = express.Router();
+const moment = require("moment")
 
 
 mongoose.connect('mongodb+srv://mraykwar99:LvIVaS9x3LyxfoQV@cluster0.1d2my.mongodb.net/bookDB?retryWrites=true&w=majority',{useNewurlParser:true})
 .then( () => console.log("mongoDb is connected"))
 .catch(err => console.log(err));
 
-router.post('/addBook', async function(req,res)
-{
-    let data = req.body;
-    let dataAdded = await bookModel.create(data)
-    res.send(dataAdded)
-});
+    router.post('/createAuthor', async function (req, res){
+        let data = req.body
+        let aid = req.body.author_id
+        if(aid)
+        {
+            let author = await authorModel.create(data)
+            res.send(author)
+        }
+        else
+        {
+            res.send("please give the author id")
+        }
+        
+    });
 
-router.get('/showBook', async function(req,res)
-{
-    // let books = await bookModel.find({ authorName:"stanlee" })
-    // let books = await bookModel.find({ authorName:"stanlee" , isPublish:true })
-    // let books = await bookModel.find({  $or:[{authorName:"stanlee"} , {isPublish:false}] })
-    // let books = await bookModel.find({ authorName:"stanlee" }).count()
-    // let books = await bookModel.find({ isPublish:true }).select({ authorName:1 , year:1 , _id:0})
-    // let books = await bookModel.find().limit(3)
-    // let books = await bookModel.find().skip(2).limit(4)
-    // let books = await bookModel.find().sort({ year:-1 })
-    // let books = await bookModel.find({ sales:{$eq:100} })
-    // let books = await bookModel.find({ sales:{$ne:0} })
-    // let books = await bookModel.find({ sales:{$gt:100} })
-    // let books = await bookModel.find({ sales:{$ls:100} })
-    // let books = await bookModel.find({ year:{$in:[1998,1989,2000]} })
-    // let books = await bookModel.find({ year:{$nin:[1999,1989]} })
-    // let books = await bookModel.findById("625593a853390925333a76b6")
-    // let books = await bookModel.findOne({ isPublish:false })
-    // let books = await bookModel.updateOne({
-    //     sales:100,
-    //     $set:{ isPublisg:false }
-    // })
-    // let books = await bookModel.find({ authorName:/^s/ })
-    // let books = await bookModel.find({ authorName:/^s/i })
-    // let books = await bookModel.find({ authorName:/n$/ })
-    // let books = await bookModel.find({ authorName:/.*le*./ })
-    
-    res.send(books)
-});
+    router.post('/addBook', async function (req, res){
+        let data = req.body
+        let aid = req.body.author_id
+        if(aid)
+        {
+            let book = await bookModel.create(data)
+            res.send(book)
+        }
+        else
+        {
+            res.send("please give the author id")
+        }
+        
+    });
+
+    router.get('/findChetanBook', async function (req, res){
+        let authorid = await authorModel.findOne({ author_name:'Chetan Bhagat' }).select({ author_id : 1 , _id:0 })
+        let book = await bookModel.find(authorid)
+        res.send(book)
+    });
+
+    router.get('/findAuthorAndUpdatePrice', async function (req, res){
+        let priceUpdate = await bookModel.findOneAndUpdate(
+            {name:"Two states"},
+            {$set:{ price : 100 }},
+            {new:true}
+        ).select({ _id:0 , price:1 });
+
+        let authorid = await bookModel.findOne({ name:"Two states" }).select({author_id : 1 , _id:0 })
+        let author = await authorModel.findOne(authorid).select({ author_name:1 , _id:0 })
+        
+        let result = { priceUpdate , author }
+
+        res.send(result)
+
+    });
+
+    router.get('/findBook', async function (req, res){
+        let book = await bookModel.find( { price:{$gt:50} , price:{$lt:100} }).select({author_id:1 , _id:0 })
+        let aid = book.map(x=> x.author_id)
+        let author = await authorModel.find({ author_id : {$in:aid} }).select({ author_name:1 , _id:0 })
+        res.send(author)
+    });
+
+
+
 
 module.exports = router;
