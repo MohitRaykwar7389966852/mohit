@@ -1,14 +1,23 @@
-
 const mongoose = require('mongoose');
-
-//we can create schema by mongoose to struct the data
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const bookSchema = new mongoose.Schema({
     name:String,
-    author_id:Number,
-    price:Number,
-    rating:Number
-},{timestamps:true});
+	price:Number,
+    ratings:Number,
+    isHardCover:{
+        type:Boolean,
+        default:false
+    },
+    author:{
+        type:ObjectId,
+        ref:"Author"
+    },
+	publisher: {
+        type:ObjectId,
+        ref:"Publisher"
+    }
+});
 
 module.exports = mongoose.model('Book' , bookSchema) //this is a syntax to export the model
 
