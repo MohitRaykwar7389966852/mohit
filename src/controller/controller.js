@@ -2,60 +2,39 @@ const userModel = require('../model/userModel');
 const productModel = require('../model/productModel');
 const orderModel = require('../model/orderModel');
 
-const createProduct =  async function(req , res)
-{
-    let data = req.body
-    let product = await productModel.create(data)
-    res.send(product)
-}
+const jwt = require('jsonwebtoken');
 
-const createUser =  async function(req , res)
+const addUser =  async function(req , res)
 {
-    req.body.isFreeAppUser = req.headers['isfreeappuser']
     let data = req.body
     let user = await userModel.create(data)
     res.send(user)
 }
 
-const order =  async function(req , res)
+const login =  async function(req , res)
 {
-    let data = req.body
-    let checkuser = await userModel.findOne({_id : req.body.userId})
-    let checkproduct = await productModel.findOne({_id : req.body.productId})
-    if(checkuser == null)
-    {
-        res.send("incorrect user id")
-    }
-    else if(checkproduct==null)
-    {
-        res.send("incorrect product id")
-    }
+    let token = await jwt.sign({userId : req.body.email} , "x-auth-example")
 
-    req.body.isFreeAppUser = req.headers["isfreeappuser"]
-    if(req.body.isFreeAppUser == "true")
-    {
-        req.body.amount = 0
-    }
-    else
-    {
-        let productPrice = await productModel.findOne({ _id:req.body.productId }).select({_id:0 , price:1})
-        let userBalance = await userModel.findOne({ _id:req.body.userId }).select({_id:0 , balance:1})
-        if(productPrice.price < userBalance.balance )
-        {
-            req.body.amount = (userBalance.balance - productPrice.price)
-        }
-        else
-        {
-            res.send("the user doesn't have enough balance")
-        }
-        
-    }
-
-    let order = await orderModel.create(data)
-    res.send(order)
-    
+    let user = await userModel.findOne({ email: req.body.email , password:req.body.password })
+    if(!user) res.send("user is not exist")
+    res.send({status:true, data:token})
 }
 
-module.exports.createProduct = createProduct;
-module.exports.createUser = createUser;
-module.exports.order = order;
+const fetch =  async function(req , res)
+{   
+    let token = req.headers['x-auth-example']
+    if(!token) res.send("header not available")
+    else console.log("header present")
+
+    var decoded = jwt.verify(token, 'x-auth-example');
+    if(!decoded) res.send("token is not verified")
+    else console.log("token is verified")
+
+    let data = req.query
+    let user = await userModel.findOne({ _id:data.userid })
+    res.send(user)
+}
+
+module.exports.addUser = addUser;
+module.exports.login = login;
+module.exports.fetch = fetch;
