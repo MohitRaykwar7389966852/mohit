@@ -1,86 +1,61 @@
-const bookModel = require('../model/bookModel');
-const authorModel = require('../model/authorModel');
-const publisherModel = require('../model/publisherModel');
+const userModel = require('../model/userModel');
+const productModel = require('../model/productModel');
+const orderModel = require('../model/orderModel');
 
-const createAuthor =  async function(req , res)
+const createProduct =  async function(req , res)
 {
     let data = req.body
-    let author = await authorModel.create(data)
-    res.send(author)
+    let product = await productModel.create(data)
+    res.send(product)
 }
 
-const createPublisher = async function(req , res)
+const createUser =  async function(req , res)
 {
+    req.body.isFreeAppUser = req.headers['isfreeappuser']
     let data = req.body
-    let publisher = await publisherModel.create(data)
-    res.send(publisher)
+    let user = await userModel.create(data)
+    res.send(user)
 }
 
-const createBook = async function(req , res)
+const order =  async function(req , res)
 {
     let data = req.body
-    if(data.author)
+    let checkuser = await userModel.findOne({_id : req.body.userId})
+    let checkproduct = await productModel.findOne({_id : req.body.productId})
+    if(checkuser == null)
     {
-        let authorId = await authorModel.findOne({ _id:data.author })
-        if(!authorId)
-        {
-            res.send("the author is not present in record")
-        }
+        res.send("incorrect user id")
+    }
+    else if(checkproduct==null)
+    {
+        res.send("incorrect product id")
+    }
+
+    req.body.isFreeAppUser = req.headers["isfreeappuser"]
+    if(req.body.isFreeAppUser == "true")
+    {
+        req.body.amount = 0
     }
     else
     {
-        res.send("the author detail is required")
-    }
-
-    if(data.publisher)
-    {
-        let publisherId = await publisherModel.findOne({ _id:data.publisher })
-        if(!publisherId)
+        let productPrice = await productModel.findOne({ _id:req.body.productId }).select({_id:0 , price:1})
+        let userBalance = await userModel.findOne({ _id:req.body.userId }).select({_id:0 , balance:1})
+        if(productPrice.price < userBalance.balance )
         {
-            res.send("the publisher is not present in record")
+            req.body.amount = (userBalance.balance - productPrice.price)
         }
-    }
-    else
-    {
-        res.send("the publisher detail is required")
+        else
+        {
+            res.send("the user doesn't have enough balance")
+        }
+        
     }
 
-    let book = await bookModel.create(data)
-    res.send(book)
+    let order = await orderModel.create(data)
+    res.send(order)
+    
 }
 
-const fetchBook = async function(req , res)
-{
-    let book = await bookModel.find().populate('author').populate('publisher')
-    res.send(book)
-}
-
-const books = async function(req , res)
-{
-    let publisher = await publisherModel.find({ name:{$in:["penguin" ,"HarperCollins"]} }).select({_id:1})
-    let updateIsHardCover
-    for(let i=0; i<publisher.length; i++)
-    {
-        updateIsHardCover = await bookModel.updateMany(
-            { publisher : publisher[i]._id },
-            {$set:{isHardCover : true}}
-        )
-    }
-
-    let author = await authorModel.find({ rating:{$gt: 3.5} })
-    let updatePrice
-    for(let i=0; i<author.length; i++)
-    {
-        updatePrice = await bookModel.updateMany(
-            { author : author[i]._id },
-            {$inc:{price : 10}}
-        )
-    }
-    res.send({updateIsHardCover , updatePrice})
-}
-
-module.exports.createAuthor = createAuthor;
-module.exports.createPublisher = createPublisher;
-module.exports.createBook = createBook;
-module.exports.fetchBook = fetchBook;
-module.exports.books = books;
+module.exports.createProduct = createProduct;
+module.exports.createUser = createUser;
+module.exports.order = order;

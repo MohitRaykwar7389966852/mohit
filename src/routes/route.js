@@ -1,22 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const controller = require('../controller/controller');
 const router = express.Router();
-const moment = require("moment")
+const mw = require('../middleware/middleware');
+const controller = require('../controller/controller');
 
-
-mongoose.connect('mongodb+srv://mraykwar99:LvIVaS9x3LyxfoQV@cluster0.1d2my.mongodb.net/MongoDb3?retryWrites=true&w=majority',{useNewurlParser:true})
+mongoose.connect('mongodb+srv://mraykwar99:LvIVaS9x3LyxfoQV@cluster0.1d2my.mongodb.net/MiddlewareDb?retryWrites=true&w=majority',{useNewurlParser:true})
 .then( () => console.log("mongoDb is connected"))
 .catch(err => console.log(err));
 
-    router.post('/createAuthor', controller.createAuthor );
+router.post('/createProduct', controller.createProduct );
 
-    router.post('/createPublisher', controller.createPublisher );
+router.post('/createUser',mw.checkFreeUser, controller.createUser );
 
-    router.post('/createBook', controller.createBook );
-
-    router.get('/fetchBook', controller.fetchBook );
-
-    router.put('/books' , controller.books);
+router.post('/order',mw.checkFreeUser,controller.order );
 
 module.exports = router;
